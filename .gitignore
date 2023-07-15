@@ -1,0 +1,22 @@
+# Ignorasi file hasil kompilasi
+*.exe
+*.dll
+*.pdb
+
+# Ignorasi folder hasil build
+/Debug/
+/Release/
+/ServiceRunner/Release
+
+# Ignorasi file hasil proyek Visual Studio
+.vs
+ipch
+*.opensdf
+*.sdf
+*.suo
+*.VC.db
+*.VC.VC.opendb
+*.log
+*.pdb
+*.ilk
+*.user
