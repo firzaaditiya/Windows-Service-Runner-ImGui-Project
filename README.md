@@ -17,11 +17,13 @@ Berikut adalah gambaran project ini :
 
 ![Ini adalah menu utama dimana kita bisa mengaktifkan dan menonaktifkan service yang sudah kita tambahkan](https://github.com/firzaaditiya/Windows-Service-Runner-ImGui-Project/blob/main/preview-service-runner.png)
 
-pada gambar diatas nni adalah menu utama dimana kita bisa mengaktifkan dan menonaktifkan service yang sudah kita tambahkan.
+pada gambar diatas ini adalah menu utama dimana kita bisa mengaktifkan dan menonaktifkan service yang sudah kita tambahkan.
 
 ![Ini adalah menu input dimana kita bisa menambahkan list service agar muncul di menu utama](https://github.com/firzaaditiya/Windows-Service-Runner-ImGui-Project/blob/main/preview-service-runner2.png)
 
 pada gambar ke 2 ini adalah menu input dimana kita bisa menambahkan list service agar muncul di menu utama.
+
+Program masih versi awal mungkin bakal di improve kalo nemu masalah, tapi mungkin nanti bakal ditambah error message sih, tunggu aja
 
 ## Licence
 Proyek ini dilisensikan di bawah [MIT License](LICENSE).
