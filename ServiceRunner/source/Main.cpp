@@ -178,12 +178,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nSho
 							if (ImGui::Checkbox(svcName.c_str(), &svcCheckBox[svcName])) {
 								if (svcStatus[svcName] == false) {
 									ServiceRunner::svcWinApiStart(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcStatus[svcName]);
-									ServiceRunner::svcCheckStatus(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcCheckBox[svcName]);
 								}
 							} else {
 								if (svcStatus[svcName] == true && svcCheckBox[svcName] == false) {
 									ServiceRunner::svcWinApiStop(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcStatus[svcName]);
-									ServiceRunner::svcCheckStatus(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcCheckBox[svcName]);
 								}
 							}
 						} else {
@@ -223,15 +221,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nSho
 							isCanWrite = false;
 							updateService = false;
 						} else {
-							for (const auto& svcName : svcnames) {
-								if (StrConvert::toLowcase(inputServiceName) == StrConvert::toLowcase(svcName)) {
-									isDuplicate = true;
-									isCanWrite = false;
-									break;
-								}
-
+							if (svcnames.size() < 1) {
 								isDuplicate = false;
 								isCanWrite = true;
+							} else {
+								for (const auto& svcName : svcnames) {
+									if (StrConvert::toLowcase(inputServiceName) == StrConvert::toLowcase(svcName)) {
+										isDuplicate = true;
+										isCanWrite = false;
+										break;
+									}
+
+									isDuplicate = false;
+									isCanWrite = true;
+								}
 							}
 						}
 
