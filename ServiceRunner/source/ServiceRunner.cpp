@@ -50,20 +50,20 @@ void ServiceRunner::svcWinApiStart(const std::wstring& svcname, DWORD *errorCode
             {
                 *errorCode = GetLastError();
             }
-
-            CloseServiceHandle(service);
         }
         else
         {
             *errorCode = GetLastError();
         }
 
-        CloseServiceHandle(ServiceControlManager);
+		CloseServiceHandle(service);
     }
     else
     {
 		*errorCode = GetLastError();
     }
+
+	CloseServiceHandle(ServiceControlManager);
 }
 
 // Stop service use WinApi
@@ -87,18 +87,80 @@ void ServiceRunner::svcWinApiStop(const std::wstring& svcname, DWORD *errorCode,
             {
                 *errorCode = GetLastError();
             }
-
-            CloseServiceHandle(service);
         }
         else
         {
             *errorCode = GetLastError();
         }
 
-        CloseServiceHandle(ServiceControlManager);
+		CloseServiceHandle(service);
     }
     else
     {
 		*errorCode = GetLastError();
     }
+
+	CloseServiceHandle(ServiceControlManager);
+}
+
+void ServiceRunner::svcCheckStatus(const std::wstring& svcname, DWORD *errorCode, bool *status)
+{
+	std::string svcnamestr(svcname.begin(), svcname.end());
+    LPCSTR svcnameCStr = svcnamestr.c_str();
+
+	SC_HANDLE ServiceControlManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+	if (ServiceControlManager) {
+		SC_HANDLE service = OpenService(ServiceControlManager, svcnameCStr, SERVICE_QUERY_STATUS);
+		if (service) {
+			SERVICE_STATUS svcStatus;
+
+			if (QueryServiceStatus(service, &svcStatus) == 0) {
+				CloseServiceHandle(service);
+				CloseServiceHandle(ServiceControlManager);
+
+				return;
+			}
+
+			if (svcStatus.dwCurrentState == SERVICE_RUNNING) {
+				*status = true;
+			} else {
+				*status = false;
+			} 
+		} else
+        {
+            *errorCode = GetLastError();
+        }
+
+		CloseServiceHandle(service);
+	} else
+    {
+        *errorCode = GetLastError();
+    }
+
+	CloseServiceHandle(ServiceControlManager);
+}
+
+bool ServiceRunner::svcCheckRegistered(const std::wstring& svcname)
+{
+	std::string svcnamestr(svcname.begin(), svcname.end());
+    LPCSTR svcnameCStr = svcnamestr.c_str();
+	bool isRegistered = false;
+
+	SC_HANDLE ServiceControlManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+	if (ServiceControlManager) {
+		SC_HANDLE service = OpenService(ServiceControlManager, svcnameCStr, SERVICE_QUERY_STATUS);
+		if (service) {
+			CloseServiceHandle(service);
+			CloseServiceHandle(ServiceControlManager);
+
+			isRegistered = true;
+		} else {
+			CloseServiceHandle(service);
+			CloseServiceHandle(ServiceControlManager);
+
+			isRegistered = false;
+		}
+	}
+
+	return isRegistered;
 }

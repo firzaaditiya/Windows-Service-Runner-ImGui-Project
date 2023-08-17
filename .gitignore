@@ -4,9 +4,10 @@
 *.pdb
 
 # Ignorasi folder hasil build
-/Debug/
-/Release/
+/Debug
+/Release
 /ServiceRunner/Release
+/ServiceRunner/source/Release
 
 # Ignorasi file hasil proyek Visual Studio
 .vs

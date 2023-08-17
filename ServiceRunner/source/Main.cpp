@@ -106,10 +106,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nSho
 	// Add Service Vars
 	static char inputServiceName[128] = "";
 
-	// fstream logic
+	// Vector svcnames
 	static std::vector<std::string> svcnames;
 
-	// Read File
+	// fstream Logic Read File
 	static std::string svcNameBuffer;
 	while(std::getline(ifile, svcNameBuffer)) {
 		svcnames.push_back(svcNameBuffer);
@@ -129,8 +129,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nSho
     }
 	ifile.close();
 
+	for (const auto& svcName : svcnames) {
+		ServiceRunner::svcCheckStatus(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcCheckBox[svcName]);
+	}
+
 	// Update
 	static bool updateService = false;
+
+	// Boolean Vars
+	static bool isDuplicate = false;
+	static bool isSuccessAddSvc = false;
+	static bool isEmptyInput = false;
+
+
 
     // Main loop
 	while (!glfwWindowShouldClose(window))
@@ -160,26 +171,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nSho
 				if(ImGui::BeginTabItem("Service")) {
 					ImGui::Text("Make sure your run this program as Administrator.");
 					ImGui::Separator();
-
-					// Update Service
-					if (updateService) {
-						ifile.open("Service.dat");
-						static std::string bufferLastLine;
-
-						while(std::getline(ifile, svcNameBuffer)) {
-							bufferLastLine = svcNameBuffer;
-						}
-
-						svcnames.push_back(bufferLastLine);
-						svcCheckBox.insert(std::make_pair(svcnames.back(), false));
-						svcErrorCode.insert(std::make_pair(svcnames.back(), NO_ERROR));
-						svcStatus.insert(std::make_pair(svcnames.back(), false));
-
-						ifile.close();
-						updateService = false;
-					} else {
-						for (const auto& svcName : svcnames) {
+					ImGui::Spacing();
+					
+					for (const auto& svcName : svcnames) {
+						if (ServiceRunner::svcCheckRegistered(StrConvert::ConvertToWideString(svcName))) {
 							if (ImGui::Checkbox(svcName.c_str(), &svcCheckBox[svcName])) {
+								if (svcStatus[svcName] == false) {
+									ServiceRunner::svcWinApiStart(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcStatus[svcName]);
+									ServiceRunner::svcCheckStatus(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcCheckBox[svcName]);
+								}
+							} else {
+								if (svcStatus[svcName] == true && svcCheckBox[svcName] == false) {
+									ServiceRunner::svcWinApiStop(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcStatus[svcName]);
+									ServiceRunner::svcCheckStatus(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcCheckBox[svcName]);
+								}
+							}
+						} else {
+							if (ImGui::Checkbox((svcName + " [ Not Registered ]").c_str(), &svcCheckBox[svcName])) {
 								if (svcStatus[svcName] == false) {
 									ServiceRunner::svcWinApiStart(StrConvert::ConvertToWideString(svcName), &svcErrorCode[svcName], &svcStatus[svcName]);
 								}
@@ -198,15 +206,76 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char*, int nSho
 				if(ImGui::BeginTabItem("Input")) {
 					ImGui::Text("Make sure the service is registered locally.");
 					ImGui::Separator();
+					ImGui::Spacing();
 					ImGui::Text("Add Service :");
-					ImGui::InputTextWithHint("##inputservice", "Service Name", inputServiceName, IM_ARRAYSIZE(inputServiceName));
-				
-					ofile.open("Service.dat", std::ios::app);
+					ImGui::Spacing();
+					ImGui::InputTextWithHint("##inputservice", "Service Name", inputServiceName, IM_ARRAYSIZE(inputServiceName), ImGuiInputTextFlags_CharsNoBlank);
+					ImGui::Spacing();
+
 					if (ImGui::Button("Submit")) {
-						ofile << inputServiceName << std::endl;
-						updateService = true;
+						bool isCanWrite = false;
+						isEmptyInput = false;
+
+						// Validation Null Input
+						if (strcmp(inputServiceName, "") == 0) {
+							isEmptyInput = true;
+							isDuplicate = false;
+							isCanWrite = false;
+							updateService = false;
+						} else {
+							for (const auto& svcName : svcnames) {
+								if (StrConvert::toLowcase(inputServiceName) == StrConvert::toLowcase(svcName)) {
+									isDuplicate = true;
+									isCanWrite = false;
+									break;
+								}
+
+								isDuplicate = false;
+								isCanWrite = true;
+							}
+						}
+
+						// Write to file Service.dat
+						if (isCanWrite) {	
+							ofile.open("Service.dat", std::ios::app);
+							ofile << inputServiceName << std::endl;
+							ofile.close();
+							updateService = true;
+							isSuccessAddSvc = true;
+						}
+
+						// Update Service
+						if (updateService) {
+							ifile.open("Service.dat");
+							static std::string bufferLastLine;
+
+							while(std::getline(ifile, svcNameBuffer)) {
+								bufferLastLine = svcNameBuffer;
+							}
+
+							svcnames.push_back(bufferLastLine);
+							svcCheckBox.insert(std::make_pair(svcnames.back(), false));
+							svcErrorCode.insert(std::make_pair(svcnames.back(), NO_ERROR));
+							svcStatus.insert(std::make_pair(svcnames.back(), false));
+
+							ifile.close();
+							updateService = false;
+						}
 					}
-					ofile.close();
+
+					if (isEmptyInput) {
+						ImGui::Spacing();
+						ImGui::Separator();
+						ImGui::Text("Error : Please avoid to input empty string.");
+					} else if (isDuplicate) {
+						ImGui::Spacing();
+						ImGui::Separator();
+						ImGui::Text("Error : Service has been registered, please avoid duplicating input.");
+					} else if (isSuccessAddSvc) {
+						ImGui::Spacing();
+						ImGui::Separator();
+						ImGui::Text("Message : Success add Service.");
+					}
 
 					ImGui::EndTabItem();
 				}

@@ -1,5 +1,7 @@
 #include "StrConvert.h"
 #include <Windows.h>
+#include <algorithm>
+#include <cctype>
 #include <string>
 
 std::wstring StrConvert::ConvertToWideString(const std::string& str) {
@@ -17,4 +19,11 @@ std::wstring StrConvert::ConvertToWideString(const std::string& str) {
     wideStr.resize(wideStrLength - 1);
 
     return wideStr;
+}
+
+std::string StrConvert::toLowcase(const std::string& str) {
+	std::string resultBuffer = str;
+	std::transform(resultBuffer.begin(), resultBuffer.end(), resultBuffer.begin(), [](unsigned char c) { return std::tolower(c); });
+
+	return resultBuffer;
 }
